@@ -1,0 +1,32 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.berkeh.connector'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.berkeh.connector'
+        minSdk 26
+        targetSdk 35
+        versionCode 10000
+        versionName '1.0.0'
+    }
+    signingConfigs {
+        release {
+            if (System.getenv('BERKEH_KEYSTORE')) {
+                storeFile file(System.getenv('BERKEH_KEYSTORE'))
+                storePassword System.getenv('BERKEH_STORE_PASSWORD')
+                keyAlias 'berkeh'
+                keyPassword System.getenv('BERKEH_STORE_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv('BERKEH_KEYSTORE')) signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
