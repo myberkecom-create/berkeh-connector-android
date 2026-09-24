@@ -3,7 +3,28 @@ import android.Manifest;import android.app.*;import android.os.*;import android.
 public final class MainActivity extends Activity {
  LinearLayout root,content;TextView status;EditText site,secret,senders;String tab="home";final Handler handler=new Handler(Looper.getMainLooper());boolean visible;final Runnable ticker=new Runnable(){public void run(){if(visible){updateStatus();handler.postDelayed(this,3000);}}};
  int dp(int n){return (int)(getResources().getDisplayMetrics().density*n);}
- public void onCreate(Bundle b){super.onCreate(b);getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);if(Build.VERSION.SDK_INT>=35)getWindow().setDecorFitsSystemWindows(false);root=new LinearLayout(this);root.setOrientation(1);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setBackgroundColor(Color.rgb(243,246,245));root.setPadding(dp(20),dp(18),dp(20),dp(10));root.setOnApplyWindowInsetsListener((v,in)->{int top=in.getSystemWindowInsetTop(),bottom=in.getSystemWindowInsetBottom();v.setPadding(dp(20),top+dp(12),dp(20),bottom+dp(10));return in;});setContentView(root);TextView title=text("برکه کانکتور",26,true);root.addView(title);root.addView(text("اتصال پیامک بانک به فروشگاه شما",13,false));LinearLayout nav=new LinearLayout(this);for(String t:new String[]{"خانه","اتصال","گزارش"}){Button b1=new Button(this);b1.setText(t);b1.setAllCaps(false);nav.addView(b1,new LinearLayout.LayoutParams(0,dp(54),1));b1.setOnClickListener(v->show(t.equals("خانه")?"home":t.equals("اتصال")?"settings":"logs"));}root.addView(nav);ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));show(Config.get(this,"site").isEmpty()?"settings":"home");SyncJob.schedule(this);}
+ public void onCreate(Bundle b){super.onCreate(b);getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);if(Build.VERSION.SDK_INT>=35)getWindow().setDecorFitsSystemWindows(false);root=new LinearLayout(this);root.setOrientation(1);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setBackgroundColor(Color.rgb(243,246,245));root.setPadding(dp(20),dp(18),dp(20),dp(10));root.setOnApplyWindowInsetsListener((v,in)->{int top=in.getSystemWindowInsetTop(),bottom=in.getSystemWindowInsetBottom();v.setPadding(dp(20),top+dp(12),dp(20),bottom+dp(10));return in;});setContentView(root);requestSmsPermissions();TextView title=text("برکه کانکتور",26,true);root.addView(title);root.addView(text("اتصال پیامک بانک به فروشگاه شما",13,false));LinearLayout nav=new LinearLayout(this);for(String t:new String[]{"خانه","اتصال","گزارش"}){Button b1=new Button(this);b1.setText(t);b1.setAllCaps(false);nav.addView(b1,new LinearLayout.LayoutParams(0,dp(54),1));b1.setOnClickListener(v->show(t.equals("خانه")?"home":t.equals("اتصال")?"settings":"logs"));}root.addView(nav);ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));show(Config.get(this,"site").isEmpty()?"settings":"home");SyncJob.schedule(this);}
+
+ void requestSmsPermissions(){
+  if(Build.VERSION.SDK_INT>=23){
+   boolean read=checkSelfPermission(Manifest.permission.READ_SMS)==PackageManager.PERMISSION_GRANTED;
+   boolean receive=checkSelfPermission(Manifest.permission.RECEIVE_SMS)==PackageManager.PERMISSION_GRANTED;
+   if(!read || !receive){
+    requestPermissions(new String[]{
+     Manifest.permission.READ_SMS,
+     Manifest.permission.RECEIVE_SMS
+    },2001);
+   }
+  }
+ }
+
+ @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){
+  super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+  if(requestCode==2001){
+   updateStatus();
+  }
+ }
+
  public void onResume(){super.onResume();visible=true;handler.removeCallbacks(ticker);handler.post(ticker);}public void onPause(){visible=false;handler.removeCallbacks(ticker);super.onPause();}
  TextView text(String s,int size,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(Color.rgb(27,46,42));t.setPadding(0,dp(8),0,dp(8));t.setLineSpacing(dp(4),1);if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
  void label(String s){content.addView(text(s,15,true));}void note(String s){content.addView(text(s,14,false));}
