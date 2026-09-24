@@ -17,15 +17,7 @@ public final class MainActivity extends Activity {
    }
   }
  }
-
- @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){
-  super.onRequestPermissionsResult(requestCode,permissions,grantResults);
-  if(requestCode==2001){
-   updateStatus();
-  }
- }
-
- public void onResume(){super.onResume();visible=true;handler.removeCallbacks(ticker);handler.post(ticker);}public void onPause(){visible=false;handler.removeCallbacks(ticker);super.onPause();}
+public void onResume(){super.onResume();visible=true;handler.removeCallbacks(ticker);handler.post(ticker);}public void onPause(){visible=false;handler.removeCallbacks(ticker);super.onPause();}
  TextView text(String s,int size,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(Color.rgb(27,46,42));t.setPadding(0,dp(8),0,dp(8));t.setLineSpacing(dp(4),1);if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
  void label(String s){content.addView(text(s,15,true));}void note(String s){content.addView(text(s,14,false));}
  void button(String s,Runnable r){Button b=new Button(this);b.setText(s);b.setAllCaps(false);b.setTextColor(Color.WHITE);GradientDrawable d=new GradientDrawable();d.setColor(Color.rgb(22,119,104));d.setCornerRadius(dp(14));b.setBackground(d);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(52));p.setMargins(0,dp(7),0,dp(7));content.addView(b,p);b.setOnClickListener(v->r.run());}
@@ -38,6 +30,19 @@ public final class MainActivity extends Activity {
  void test(){if(Config.get(this,"site").isEmpty()){toast("ابتدا تنظیمات را ذخیره کنید.");return;}toast("در حال آزمایش اتصال…");new Thread(()->{String result;try{Api.post(this,"auth-check",Api.identity(this));result="اتصال و کلید API معتبر است.";}catch(Exception e){result=Api.explain(e);}final String msg=result;runOnUiThread(()->{Config.prefs(this).edit().putString("last",msg).apply();updateStatus();new AlertDialog.Builder(this).setTitle("نتیجه اتصال").setMessage(msg).setPositiveButton("باشه",null).show();});}).start();}
  void toggle(){if(Config.enabled(this)){Config.prefs(this).edit().putBoolean("enabled",false).commit();SyncJob.cancel(this);show("home");return;}if(Config.get(this,"site").isEmpty()||Config.get(this,"secret").isEmpty()||Config.get(this,"senders").trim().isEmpty()){toast("آدرس، کلید و فرستنده‌های مجاز را تکمیل کنید.");show("settings");return;}new AlertDialog.Builder(this).setTitle("اجازه ارسال پیامک‌های بانکی").setMessage("با فعال‌سازی، متن کامل پیامک‌های جدیدِ فرستنده‌های انتخابی، شامل اطلاعات تراکنش، برای بررسی پرداخت به این سایت ارسال می‌شود:\n"+Config.get(this,"site")+"\n\nاگر اینترنت قطع باشد، پیامک رمزگذاری و برای ارسال مجدد نگهداری می‌شود. ارسال را هر زمان می‌توانید متوقف کنید.").setPositiveButton("موافقم و فعال می‌کنم",(d,w)->{if(checkSelfPermission(Manifest.permission.RECEIVE_SMS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.RECEIVE_SMS},71);else enable();}).setNegativeButton("انصراف",null).show();}
  void enable(){Config.prefs(this).edit().putBoolean("enabled",true).commit();SyncJob.schedule(this);show("home");}
- public void onRequestPermissionsResult(int req,String[] p,int[] g){super.onRequestPermissionsResult(req,p,g);if(req==71&&g.length>0&&g[0]==PackageManager.PERMISSION_GRANTED)enable();else toast("بدون مجوز پیامک، ارسال خودکار فعال نمی‌شود.");}
+ public void onRequestPermissionsResult(int req,String[] p,int[] g){
+super.onRequestPermissionsResult(req,p,g);
+if(req==2001){
+ updateStatus();
+ return;
+}
+if(req==71){
+ if(g.length>0 && g[0]==PackageManager.PERMISSION_GRANTED){
+  enable();
+ }else{
+  toast("بدون مجوز پیامک، ارسال خودکار فعال نمی‌شود.");
+ }
+}
+}
  void toast(String s){Toast.makeText(this,s,Toast.LENGTH_LONG).show();}
 }
